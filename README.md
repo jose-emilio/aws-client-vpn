@@ -65,7 +65,7 @@ El presente documento muestra cómo se puede configurar un punto de enlace de AW
 
         aws ec2 export-client-vpn-client-configuration --client-vpn-endpoint-id $vpnid --output text > mivpn.ovpn
 
-13. Por último, hay que editar el archivo creado mivpn.ovpn y realizar las siguientes modificaciones:
+13. El archivo descargado necesita algunas modificaciones. Por ello hay que editar el archivo mivpn.ovpn y realizar las siguientes modificaciones:
 
     Añadir una línea para enrutar el tráfico con destino al bloque CIDR de la VPC:
     
@@ -78,6 +78,14 @@ El presente documento muestra cómo se puede configurar un punto de enlace de AW
         -----END CERTIFICATE-------
         </cert>
  
-
+    Añadir un bloque con el contenido del archivo de la clave privada del cliente, ubicado en ~/certs/client.domain.tld.key :
         
-7. 
+        <key>
+        -----BEGIN PRIVATE KEY-----
+        -----END PRIVATE KEY-------
+        </key>
+        
+14. Por último, importar el perfil del archivo mivpn.ovpn con el cliente OpenVPN elegido.
+
+15. Lanzar una instancia EC2 en la VPC por defecto (asignándole el grupo de seguridad default) y comprobar la conectividad desde la máquina local.  
+
