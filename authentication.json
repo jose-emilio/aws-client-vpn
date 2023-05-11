@@ -1,0 +1,8 @@
+[
+    {
+      "Type": "certificate-authentication",
+      "MutualAuthentication": {
+        "ClientRootCertificateChainArn": "<certificado-cliente>"
+      }
+    }
+]
