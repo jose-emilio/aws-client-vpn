@@ -8,7 +8,7 @@ El presente documento muestra cómo se puede configurar un punto de enlace de AW
 * Disponer de un acceso programático configurado a los servicios de AWS
 
 ## Instrucciones
-1. Si no se ha realizado ya, es necesario crear una nueva PKI (Public Key Infrastructure) y una CA (Certificate Authority) para emitir certificados de confianza.
+1. Si no se ha realizado ya, es necesario crear una nueva PKI (<em>Public Key Infrastructure</em>) y una CA (<em>Certificate Authority</em>) para emitir certificados de confianza.
     
         $ /usr/share/easy-rsa/easyrsa init-pki
         $ /usr/share/easy-rsa/easyrsa build-ca nopass
