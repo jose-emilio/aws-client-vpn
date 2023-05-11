@@ -8,6 +8,7 @@ Disponer de el software easyrsa (https://github.com/OpenVPN/easy-rsa) instalado 
 
 ## Instrucciones
 1. Si no se ha realizado ya, es necesario crear una nueva PKI (Public Key Infrastructure) y una CA (Certificate Authority) para emitir certificados de confianza:
-    $ easyrsa init
-    $ easyrsa build-ca nopass
+    
+        $ easyrsa init
+        $ easyrsa build-ca nopass
 3. 
