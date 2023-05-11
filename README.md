@@ -1,5 +1,5 @@
 # Creación de un punto de enlace de AWS Client VPN
-El presente documento muestra cómo se puede configurar un punto de enlace de AWS Client VPN
+El presente documento muestra cómo se puede configurar un punto de enlace de AWS Client VPN para realizar conexiones mediante clientes OpenVPN
 
 ![AWS Client VPN](/images/client-vpn.png)
 
