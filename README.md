@@ -31,6 +31,12 @@ El presente documento muestra cómo se puede configurar un punto de enlace de AW
         cp pki/private/server.key ~/certs/
         cp pki/issued/client.domain.tld.crt ~/certs/
         cp pki/private/client.domain.tld.key ~/certs/
-        cd ~/certs/
+
         
-4. 
+4. Importar los certificados de cliente y del servicio Client VPN a AWS Certificate Manager (ACM):
+
+        cd ~/certs/
+        aws acm import-certificate --certificate fileb://server.crt --private-key fileb://server.key --certificate-chain fileb://ca.crt
+        aws acm import-certificate --certificate fileb://client.domain.tld.crt --private-key fileb://client.domain.tld.key --certificate-chain fileb://ca.crt
+        
+5. 
