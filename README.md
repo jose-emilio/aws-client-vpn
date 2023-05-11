@@ -52,7 +52,7 @@ El presente documento muestra cómo se puede configurar un punto de enlace de AW
         vpc=aws ec2 describe-vpcs --filters Name=is-default,Values=true --query Vpcs[].VpcId --output text
         vpnid=$(aws ec2 create-client-vpn-endpoint --client-cidr-block 10.8.0.0/22 --server-certificate-arn $certserver --authentication-options file://authentication.json --connection-log-options file://log-options.json --transport-protocol udp --vpn-port 1194 --vpc-id $vpc --query ClientVpnEndpointId --output text)
 
-8. Ahora falta asociar la subred donde residirá el punto de enlace. Aunque en este ejemplo sólo se asociará una subred, es una buena práctica crear múltiples asociaciones en subredes en diferentes zonas de disponibilidad:
+8. Ahora falta asociar la subred donde residirá la interfaz de red del punto de enlace. Aunque en este ejemplo sólo se asociará una subred, es una buena práctica crear múltiples asociaciones en subredes en diferentes zonas de disponibilidad para crear múltiples interfaces para el punto de enlace de Client VPN:
         
         subnet=$(aws ec2 describe-subnets --filter Name=vpc-id,Values=$vpc --query Subnets[0].SubnetId --output text)
         aws ec2 associate-client-vpn-target-network --client-vpn-endpoint $vpnid --subnet-id $subnet
