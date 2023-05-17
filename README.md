@@ -4,7 +4,7 @@ El presente documento muestra cómo se puede configurar un punto de enlace de AW
 ![AWS Client VPN](/images/client-vpn.png)
 
 ## Requerimientos
-* Disponer de el software easyrsa (https://github.com/OpenVPN/easy-rsa) instalado en la máquina cliente
+* Disponer de el software `easyrsa` (https://github.com/OpenVPN/easy-rsa) instalado en la máquina cliente
 * Disponer de un acceso programático configurado a los servicios de AWS
 
 ## Instrucciones
