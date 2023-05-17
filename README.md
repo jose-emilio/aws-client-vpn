@@ -5,7 +5,7 @@ El presente documento muestra cómo se puede configurar un punto de enlace de AW
 
 ## Requerimientos
 * Disponer de el software easyrsa (https://github.com/OpenVPN/easy-rsa) instalado en la máquina cliente
-* Disponer de un acceso programático configurado a los servicios de AWS
+* Disponer de un entorno Linux con acceso programático configurado a los servicios de AWS
 
 ## Instrucciones
 1. Si no se ha realizado ya, es necesario crear una nueva PKI (<em>Public Key Infrastructure</em>) y una CA (<em>Certificate Authority</em>) para emitir certificados de confianza.
