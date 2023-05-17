@@ -33,58 +33,65 @@ El presente documento muestra cómo se puede configurar un punto de enlace de AW
         cp pki/private/client.domain.tld.key ~/certs/
 
         
-4. Importar los certificados de cliente y del servicio Client VPN a AWS Certificate Manager (ACM):
+4. Se define la región donde se va crear la infraestructura:
 
-        cd ~/certs/
-        certserver=$(aws acm import-certificate --certificate fileb://certs/server.crt --private-key fileb://certs/server.key --certificate-chain fileb://certs/ca.crt --output text)
-        certclient=$(aws acm import-certificate --certificate fileb://certs/client.domain.tld.crt --private-key fileb://certs/client.domain.tld.key --certificate-chain fileb://certs/ca.crt --output text)
+        REGION=us-east-1
 
-5. Modificamos el archivo authentication.json para incluir el certificado del cliente. Utilizaremos este archivo durante el proceso de creación del punto de enlace de Client VPN:
+5. Se importan los certificados de cliente y del servicio Client VPN a AWS Certificate Manager (ACM):
 
-        sed -i 's|<certificado-cliente>|'$certclient'|g' authentication.json
+        certserver=$(aws acm import-certificate --certificate fileb://~/certs/server.crt --private-key fileb://~/certs/server.key --certificate-chain fileb://~/certs/ca.crt --output text --region $REGION)
+        certclient=$(aws acm import-certificate --certificate fileb://~/certs/client.domain.tld.crt --private-key fileb://~/certs/client.domain.tld.key --certificate-chain fileb://~/certs/ca.crt --output text --region $REGION)
 
-6. A continuación, crearemos un grupo de logs en Amazon CloudWatch para registrar las conexiones de los clientes VPN:
+6. Modificamos el archivo authentication.json para incluir el certificado del cliente. Utilizaremos este archivo durante el proceso de creación del punto de enlace de Client VPN:
 
-        aws logs create-log-group --log-group-name client-vpn-log
+        cd aws-client-vpn
+        sed -i 's|<certificado-cliente>|'$certclient'|g' conf/authentication.json
 
-7. A continuación, se define el punto de enlace de Client VPN en la VPC por defecto. El punto de enlace aceptará conexiones por el puerto 1194 UDP (OpenVPN). Se utilizará la red 10.8.0.0/24 para el túnel:
+7. A continuación, crearemos un grupo de logs en Amazon CloudWatch para registrar las conexiones de los clientes VPN:
 
-        vpc=aws ec2 describe-vpcs --filters Name=is-default,Values=true --query Vpcs[].VpcId --output text
-        vpnid=$(aws ec2 create-client-vpn-endpoint --client-cidr-block 10.8.0.0/22 --server-certificate-arn $certserver --authentication-options file://authentication.json --connection-log-options file://log-options.json --transport-protocol udp --vpn-port 1194 --vpc-id $vpc --query ClientVpnEndpointId --output text)
+        aws logs create-log-group --log-group-name client-vpn-log --region $REGION
 
-8. Ahora falta asociar la subred donde residirá la interfaz de red del punto de enlace. Aunque en este ejemplo sólo se asociará una subred, es una buena práctica crear múltiples asociaciones en subredes en diferentes zonas de disponibilidad para crear múltiples interfaces para el punto de enlace de Client VPN:
+8. Ahora se creará una infraestructura de VPC altamente disponible (en dos zonas de disponibilidad) para, posteriormente, definir dos interfaces de red para el punto de enlace de ClientVPN. Esta infraestructura dispondrá de dos subredes privadas, dos subredes públicas y dos Gatewa NAT. Para simplificar la tarea, se utilizará una plantilla de AWS CloudFormation (ubicada en `vpc/vpc.yaml`). Si no se tie
+
+        aws cloudformation deploy --template-file vpc/vpc.yaml --stack client-vpn-stack --parameter-overrides file://vpc/client-vpn.json --region $REGION
+
+9. A continuación, se define el punto de enlace de Client VPN en la VPC por defecto. El punto de enlace aceptará conexiones por el puerto 1194 UDP (OpenVPN). Se utilizará la red 10.8.0.0/24 para el túnel:
+
+        vpcId=$(aws cloudformation describe-stacks --stack-name client-vpn-stack --query 'Stacks[].Outputs[?OutputKey==`VPC`].OutputValue' --output text --region $REGION)
+        vpnId=$(aws ec2 create-client-vpn-endpoint --client-cidr-block 10.8.0.0/22 --server-certificate-arn $certserver --authentication-options file://conf/authentication.json --connection-log-options file://conf/log-options.json --transport-protocol udp --vpn-port 1194 --vpc-id $vpcId --query ClientVpnEndpointId --output text --region $REGION)
+
+10. Ahora falta asociar las subredes donde residirán la interfaces de red del punto de enlace. Es una buena práctica crear múltiples asociaciones en subredes (de preferencia privadas) en diferentes zonas de disponibilidad para crear múltiples interfaces para el punto de enlace de Client VPN:
         
-        subnet=$(aws ec2 describe-subnets --filter Name=vpc-id,Values=$vpc --query Subnets[0].SubnetId --output text)
-        aws ec2 associate-client-vpn-target-network --client-vpn-endpoint $vpnid --subnet-id $subnet
+        subnet1=$(aws cloudformation describe-stacks --stack-name client-vpn-stack --query 'Stacks[].Outputs[?OutputKey==`Privada1`].OutputValue' --output text --region $REGION)
+
+        subnet2=$(aws cloudformation describe-stacks --stack-name client-vpn-stack --query 'Stacks[].Outputs[?OutputKey==`Privada2`].OutputValue' --output text --region $REGION)
+
+        aws ec2 associate-client-vpn-target-network --client-vpn-endpoint $vpnId --subnet-id $subnet1 --region $REGION
+
+        aws ec2 associate-client-vpn-target-network --client-vpn-endpoint $vpnId --subnet-id $subnet2 --region $REGION
         
-10. Ya estaría creado el punto de enlace, sin embargo no se tendrá acceso a ninguna ubicación. Es por ello que se necesita añadir una autorización a un bloque CIDR; en este caso se permitirá el acceso a la VPC por defecto (172.31.0.0/16):
+11. En unos minutos, se habrán vinculado las interfaces de red en las subredes anteriores al punto de enlace de Client VPN. Sin embargo no se tendrá acceso a ninguna ubicación. Es por ello que se necesita añadir una autorización a un bloque CIDR; en este caso se va a permitir todo el direccionamiento hacia Internet (`0.0.0.0/0`):
 
-        aws ec2 authorize-client-vpn-ingress --client-vpn-endpoint-id $vpnid --target-network-cidr 172.31.0.0/16 --authorize-all-groups 
+        aws ec2 authorize-client-vpn-ingress --client-vpn-endpoint-id $vpnId --target-network-cidr 0.0.0.0/0 --authorize-all-groups --region $REGION 
 
-11. A continuación, se descarga el archivo de configuración para el cliente de OpenVPN:
+12. Ahora falta añadir las rutas estáticas a la tabla de rutas del punto de enlace de Client VPN. Para ello, vinculamos la ruta estática `0.0.0.0/0` en cada una de las subredes (privadas) donde exista un interfaz del punto de enlace de Client VPN:
 
-        aws ec2 export-client-vpn-client-configuration --client-vpn-endpoint-id $vpnid --output text > mivpn.ovpn
+        aws ec2 create-client-vpn-route --client-vpn-endpoint-id $vpnId --destination-cidr-block 0.0.0.0/0 --target-vpc-subnet-id $subnet1 --region $REGION
 
-13. El archivo descargado necesita algunas modificaciones. Por ello hay que editar el archivo mivpn.ovpn y realizar las siguientes modificaciones:
+        aws ec2 create-client-vpn-route --client-vpn-endpoint-id $vpnId --destination-cidr-block 0.0.0.0/0 --target-vpc-subnet-id $subnet2 --region $REGION
 
-    Añadir una línea para enrutar el tráfico con destino al bloque CIDR de la VPC:
+13. Tras realizar los pasos anteriores, ya estaría configurado el punto de enlace de Client VPN. A continuación, se descarga el archivo de configuración para el cliente de OpenVPN:
+
+        aws ec2 export-client-vpn-client-configuration --client-vpn-endpoint-id $vpnId --output text --region $REGION > mivpn.ovpn
+
+14. El archivo descargado necesita algunas modificaciones, entre otras incorporar el certificado de cliente y la clave privada de cliente. Para ello, hay configurado un <em>script</em> `ovpn.sh`. Para ejecutar el script anterior:
+
+        chmod 750 ovpn.sh
     
-        route 172.31.0.0/16
+        ./ovpn.sh
         
-    Añadir un bloque con el contenido del archivo del certificado del cliente, ubicado en ~/certs/client.domain.tld.crt :
-        
-        <cert>
-        -----BEGIN CERTIFICATE-----
-        -----END CERTIFICATE-------
-        </cert>
- 
-    Añadir un bloque con el contenido del archivo de la clave privada del cliente, ubicado en ~/certs/client.domain.tld.key :
-        
-        <key>
-        -----BEGIN PRIVATE KEY-----
-        -----END PRIVATE KEY-------
-        </key>
-        
-14. Por último, importar el perfil del archivo mivpn.ovpn con el cliente OpenVPN elegido.
+15. Por último, importar el perfil del archivo mivpn.ovpn con el cliente OpenVPN elegido.
 
-15. Lanzar una instancia EC2 en la VPC por defecto (asignándole el grupo de seguridad default) y comprobar la conectividad desde la máquina local.  
+16. Lanzar una instancia EC2 en la VPC por defecto (asignándole el grupo de seguridad default) y comprobar la conectividad desde la máquina local.  
+
+17. Ejecutar el comando `route -n` para comprobar que la ruta por defecto tiene como puerta de enlace la IP del túnel creado por la conexión contra el punto de enlace de Client VPN. 
