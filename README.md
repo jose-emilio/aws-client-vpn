@@ -92,6 +92,6 @@ El presente documento muestra cómo se puede configurar un punto de enlace de AW
         
 15. Por último, importar el perfil del archivo mivpn.ovpn con el cliente OpenVPN elegido.
 
-16. Lanzar una instancia EC2 en la VPC por defecto (asignándole el grupo de seguridad default) y comprobar la conectividad desde la máquina local.  
+16. Lanzar una instancia EC2 en la VPC creada (asignándole el grupo de seguridad default) y comprobar la conectividad desde la máquina local.  
 
 17. Ejecutar el comando `route -n` para comprobar que la ruta por defecto tiene como puerta de enlace la IP del túnel creado por la conexión contra el punto de enlace de Client VPN. 
