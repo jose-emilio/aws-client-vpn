@@ -86,7 +86,7 @@ El presente documento muestra cómo se puede configurar un punto de enlace de AW
 
 14. El archivo descargado necesita algunas modificaciones, entre otras incorporar el certificado de cliente y la clave privada de cliente. Para ello, hay configurado un <em>script</em> `ovpn.sh`. Para ejecutar el script anterior:
 
-        chmod 750 ovpn.sh
+        chmod +x ovpn.sh
     
         ./ovpn.sh
         
