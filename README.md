@@ -1,5 +1,9 @@
-# Creación de un punto de enlace de AWS Client VPN
-El presente documento muestra cómo se puede configurar un punto de enlace de AWS Client VPN para realizar conexiones mediante clientes OpenVPN
+# Creación y acceso a un punto de enlace de AWS Client VPN mediante autenticación mutua
+**AWS Client VPN** es un servicio administrado de VPN que permite establecer conexiones <em>Host-to-Site</em> para acceder a los recursos de AWS (e Internet) a través de clientes OpenVPN.
+
+AWS Client VPN permite autenticar a los usuarios bien mediante certificados de cliente (autenticación mutua), bien mediante un AD, o bien a través de un proveedor de identidades compatible con SAML2.0.
+
+En este repositorio se muestra cómo se puede configurar un punto de enlace de AWS Client VPN mediante autenticación mutua y cómo realizar una conexión contra dicho punto de enlace.
 
 ![AWS Client VPN](/images/client-vpn.png)
 
