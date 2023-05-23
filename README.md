@@ -7,6 +7,12 @@ En este repositorio se muestra cómo se puede configurar un punto de enlace de A
 
 ![AWS Client VPN](/images/client-vpn.png)
 
+## Servicios utilizados
+* **Amazon VPC** para el despliegue de la infraestructura de red altamente disponible de este escenario
+* **AWS Client VPN** para la configuración y despliegue del punto de enlace OpenVPN
+* **AWS Certificate Manager (ACM)** para la importación de los certificados tanto de cliente como de servidor
+* **Amazon CloudWatch Logs** para registrar las conexiones contra el punto de enlace de AWS Client VPN
+
 ## Requerimientos
 * Disponer de el software `easyrsa` (https://github.com/OpenVPN/easy-rsa) instalado en la máquina cliente
 * Disponer de una cuenta de AWS o de acceso a un sandbox de AWS Academy Learner Lab
